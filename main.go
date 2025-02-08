@@ -116,6 +116,7 @@ func main() {
     fmt.Fprintln(os.Stderr, "No capable terminal detected (Kitty, iTerm, or Sixel), and no protocol forced.")
     return
   }
+  writer.WriteString("\n")
 }
 
 func convertToPaletted(img image.Image) *image.Paletted {
