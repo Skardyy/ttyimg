@@ -1,0 +1,13 @@
+# Ignore all files with the .exe extension
+*.exe
+
+# Ignore all files with the .bin extension
+*.bin
+
+# Ignore all ELF executable files
+*.out
+*.elf
+
+# Tests
+*.png
+*.jpg
