@@ -15,15 +15,18 @@ import (
 
   "github.com/BourgeoisBear/rasterm"
   "github.com/nfnt/resize"
+  "golang.org/x/term"
 )
 
 func main() {
   var width int
   var height int
   var protocol string
-  flag.StringVar(&protocol, "p", "", "Force protocol: kitty, iterm, sixel (default: auto)")
-  flag.IntVar(&width, "w", 0, "Resize width (0 for no resize)")
-  flag.IntVar(&height, "h", 0, "Resize height (0 for no resize)")
+  var fallback string
+  flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
+  flag.StringVar(&fallback, "f", "none", "fallback to when no protocol is supported: kitty, iterm, sixel")
+  flag.IntVar(&width, "w", 0, "Resize width")
+  flag.IntVar(&height, "h", 0, "Resize height")
   flag.Parse()
 
   if len(flag.Args()) < 1 {
@@ -78,25 +81,8 @@ func main() {
     useIterm = true
   case "sixel":
     useSixel = true
-  case "": // Auto-detect
-    isKittyCapable := rasterm.IsKittyCapable()
-    isItermCapable := rasterm.IsItermCapable()
-    isSixelCapable, err := rasterm.IsSixelCapable()
-    if err != nil {
-      fmt.Fprintf(os.Stderr, "Error checking sixel capability: %v\n", err)
-      return
-    }
-    useKitty = isKittyCapable
-    useIterm = isItermCapable
-    useSixel = isSixelCapable
-    _, errWez := exec.LookPath("wezterm")
-    _, errKit := exec.LookPath("kitty")
-    if errWez == nil && useKitty {
-      useKitty = false
-    }
-    if errKit == nil && useIterm {
-      useIterm = false
-    }
+  case "auto": // Auto-detect
+    useIterm, useKitty, useSixel = detect_cap(fallback)
   default:
     fmt.Fprintf(os.Stderr, "Error: invalid protocol '%s'. Must be kitty, iterm, or sixel.\n", protocol)
     flag.PrintDefaults()
@@ -143,4 +129,66 @@ func convertToPaletted(img image.Image) *image.Paletted {
 
 func NewBufferedWriter() *bufio.Writer {
   return bufio.NewWriterSize(os.Stdout, 64*1024) // 64 KB buffer
+}
+
+func checkDeviceAttrs() (bool, error) {
+  oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+  if err != nil {
+    return false, err
+  }
+  defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+  // Send device attributes query
+  fmt.Fprint(os.Stdout, "\x1b[c")
+  os.Stdout.Sync()
+
+  response := ""
+  buf := make([]byte, 1)
+
+  // Read response until we get 'c'
+  for {
+    _, err := os.Stdin.Read(buf)
+    if err != nil {
+      return false, err
+    }
+    response += string(buf)
+    if buf[0] == 'c' {
+      break
+    }
+  }
+
+  return strings.Contains(response, ";4;") || strings.Contains(response, ";4c"), nil
+}
+
+func detect_cap(fallback string) (iterm bool, kitty bool, sixel bool) {
+  _, errWez := exec.LookPath("wezterm imgcat")
+  if errWez == nil {
+    return true, false, false
+  }
+
+  _, errKit := exec.LookPath("kitty icat")
+  if errKit == nil {
+    return false, true, false
+  }
+
+  isKittyCapable := rasterm.IsKittyCapable()
+  isItermCapable := rasterm.IsItermCapable()
+  isSixelCapable, _ := rasterm.IsSixelCapable()
+
+  if !isKittyCapable && !isItermCapable && !isSixelCapable {
+    if flag, _ := checkDeviceAttrs(); flag {
+      isSixelCapable = true
+    } else {
+      switch strings.ToLower(fallback) {
+      case "kitty":
+        isKittyCapable = true
+      case "iterm":
+        isItermCapable = true
+      case "sixel":
+        isSixelCapable = true
+      }
+    }
+  }
+
+  return isItermCapable, isKittyCapable, isSixelCapable
 }
