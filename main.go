@@ -30,7 +30,7 @@ func main() {
   flag.Parse()
 
   if len(flag.Args()) < 1 {
-    fmt.Fprintln(os.Stderr, "Usage: img_encoder [options] <path_to_image>")
+    fmt.Fprintln(os.Stderr, "Usage: ttyimg [options] <path_to_image>")
     flag.PrintDefaults()
     return
   }
