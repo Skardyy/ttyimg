@@ -16,6 +16,12 @@ import (
   "golang.org/x/image/webp"
 )
 
+// doesn't work currently need to figure out read that
+func getTerminalSize() (width int, height int, err error) {
+  os.Stdout.Write([]byte("\x1b[14t"))
+  return 0, 0, nil
+}
+
 func get_resize_mode(resizeMode string) ResizeMethod {
   if strings.ToLower(resizeMode) == "fit" {
     return Fit
@@ -50,12 +56,12 @@ func get_content(file *os.File, width int, height int) image.Image {
     width = 200
     height = 200
   } else {
-    if width == 0 {
-      width = height
+    bigger := width
+    if height > bigger {
+      bigger = height
     }
-    if height == 0 {
-      height = width
-    }
+    width = bigger
+    height = bigger
   }
 
   if strings.Contains(name, ".svg") {

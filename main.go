@@ -38,6 +38,9 @@ func main() {
   imgPath := flag.Args()[0]
 
   resizedImg := get_img(imgPath, width, height, resizeMode)
+  if resizedImg == nil {
+    return
+  }
 
   useKitty := false
   useIterm := false
