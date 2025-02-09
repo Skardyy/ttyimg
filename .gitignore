@@ -7,7 +7,3 @@
 # Ignore all ELF executable files
 *.out
 *.elf
-
-# Tests
-*.png
-*.jpg
