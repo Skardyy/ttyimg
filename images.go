@@ -8,6 +8,8 @@ import (
   "image/draw"
   "math"
   "os"
+  "os/exec"
+  "path/filepath"
   "strings"
 
   "github.com/nfnt/resize"
@@ -35,21 +37,45 @@ func get_resize_mode(resizeMode string) ResizeMethod {
   }
   return Fit
 }
+
+func is_special_doc(path string) bool {
+  exts := []string{".pdf", ".xls", ".doc", ".ppt"}
+  for _, ext := range exts {
+    if strings.Contains(path, ext) {
+      return true
+    }
+  }
+
+  return false
+}
+
 func get_img(path string, width int, height int, resizeMod string) image.Image {
   var img image.Image
 
-  if strings.Contains(path, ".pdf") {
-    width
-  } else {
+  if is_special_doc(path) {
+    tmpDir, _ := os.MkdirTemp("", "tmp")
+    cmd := exec.Command(
+      "libreoffice",
+      "--headless",
+      "--convert-to",
+      "png",
+      path,
+      "--outdir",
+      tmpDir,
+    )
+    cmd.Run()
 
-    imgFile, err := os.Open(path)
-    if err != nil {
-      fmt.Fprintf(os.Stderr, "Error opening image: %v\n", err)
-      return nil
-    }
-    defer imgFile.Close()
-    img = get_content(imgFile, width, height)
+    tmpFile := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)) + ".png"
+    path = filepath.Join(tmpDir, tmpFile)
   }
+
+  imgFile, err := os.Open(path)
+  if err != nil {
+    fmt.Fprintf(os.Stderr, "Error opening image: %v\n", err)
+    return nil
+  }
+  defer imgFile.Close()
+  img = get_content(imgFile, width, height)
 
   resizeMode := get_resize_mode(resizeMod)
   resizedImg, _ := ResizeImage(img, uint(width), uint(height), resizeMode)
