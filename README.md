@@ -37,6 +37,6 @@ Usage: ttyimg [options] <path_to_image>
 - [X] PDF  
 - [X] PPTX  
 
-> ![Note]  
+> [!Note]  
 > i am open for suggestions on other backends for the document types  
 > Libreoffice was chosen for it being the only crossplatform one  
