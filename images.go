@@ -6,7 +6,10 @@ import (
   "image"
   "image/color"
   "image/draw"
+  "math"
   "os"
+  "os/exec"
+  "path/filepath"
   "strings"
 
   "github.com/nfnt/resize"
@@ -34,8 +37,37 @@ func get_resize_mode(resizeMode string) ResizeMethod {
   }
   return Fit
 }
+
+func is_special_doc(path string) bool {
+  exts := []string{".pdf", ".xls", ".doc", ".ppt"}
+  for _, ext := range exts {
+    if strings.Contains(path, ext) {
+      return true
+    }
+  }
+
+  return false
+}
+
 func get_img(path string, width int, height int, resizeMod string) image.Image {
   var img image.Image
+
+  if is_special_doc(path) {
+    tmpDir, _ := os.MkdirTemp("", "tmp")
+    cmd := exec.Command(
+      "libreoffice",
+      "--headless",
+      "--convert-to",
+      "png",
+      path,
+      "--outdir",
+      tmpDir,
+    )
+    cmd.Run()
+
+    tmpFile := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)) + ".png"
+    path = filepath.Join(tmpDir, tmpFile)
+  }
 
   imgFile, err := os.Open(path)
   if err != nil {
@@ -83,7 +115,7 @@ func get_content(file *os.File, width int, height int) image.Image {
     icon.Draw(raster, 1.0)
 
     return img
-  } else if strings.Contains(name, ".tiff") {
+  } else if strings.Contains(name, ".tif") {
     img, err := tiff.Decode(file)
     if err != nil {
       fmt.Fprintf(os.Stderr, "Error decoding tiff: %v\n", err)
@@ -115,8 +147,30 @@ const (
   Fit     ResizeMethod = "Fit"
 )
 
+func computeDimensions(origW, origH int, width, height uint) (uint, uint) {
+  if width == 0 && height == 0 {
+    return uint(origW), uint(origH)
+  }
+  if width != 0 && height != 0 {
+    return uint(width), uint(height)
+  }
+  if width == 0 {
+    return uint(math.Round(float64(height) * (float64(origW) / float64(origH)))), height
+  }
+  if height == 0 {
+    return width, uint(math.Round(float64(width) * (float64(origH) / float64(origW))))
+  }
+  return width, height
+}
+
 func ResizeImage(img image.Image, width, height uint, method ResizeMethod) (image.Image, error) {
+  bounds := img.Bounds()
+  srcWidth := bounds.Dx()
+  srcHeight := bounds.Dy()
+  width, height = computeDimensions(srcWidth, srcHeight, width, height)
   switch method {
+  case Fit:
+    return resize.Thumbnail(width, height, img, resize.Lanczos3), nil
   case Stretch:
     // Resize without preserving the aspect ratio
     return resize.Resize(width, height, img, resize.Lanczos3), nil
@@ -124,35 +178,6 @@ func ResizeImage(img image.Image, width, height uint, method ResizeMethod) (imag
     // Crop the image to the specified dimensions
     cropped := cropImage(img, int(width), int(height))
     return cropped, nil
-  case Fit:
-    bounds := img.Bounds()
-    srcWidth := uint(bounds.Dx())
-    srcHeight := uint(bounds.Dy())
-    srcAspectRatio := float64(srcWidth) / float64(srcHeight)
-
-    var newWidth, newHeight uint
-
-    // Calculate both possible dimensions
-    option1Width := width
-    option1Height := uint(float64(width) / srcAspectRatio)
-
-    option2Width := uint(float64(height) * srcAspectRatio)
-    option2Height := height
-
-    // Choose the option that results in the larger area
-    area1 := option1Width * option1Height
-    area2 := option2Width * option2Height
-
-    if area1 >= area2 {
-      newWidth = option1Width
-      newHeight = option1Height
-    } else {
-      newWidth = option2Width
-      newHeight = option2Height
-    }
-
-    // Perform the resize
-    return resize.Resize(newWidth, newHeight, img, resize.Lanczos3), nil
   default:
     return nil, fmt.Errorf("unsupported resize method: %s", method)
   }

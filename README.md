@@ -22,3 +22,21 @@ Usage: ttyimg [options] <path_to_image>
   -w int
         Resize width
 ```
+
+## Supports ✨  
+- [X] PNG  
+- [X] JPEG  
+- [X] TIFF  
+- [X] SVG  
+- [X] WEBP  
+
+> The following are supported but requires `Libreoffice`  
+> They will take longer, because the extra step of converting the doc into an image  
+- [X] DOCX  
+- [X] XLSX  
+- [X] PDF  
+- [X] PPTX  
+
+> ![Note]  
+> i am open for suggestions on other backends for the document types  
+> Libreoffice was chosen for it being the only crossplatform one  
