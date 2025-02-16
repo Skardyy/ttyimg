@@ -19,12 +19,6 @@ import (
   "golang.org/x/image/webp"
 )
 
-// doesn't work currently need to figure out read that
-func getTerminalSize() (width int, height int, err error) {
-  os.Stdout.Write([]byte("\x1b[14t"))
-  return 0, 0, nil
-}
-
 func get_resize_mode(resizeMode string) ResizeMethod {
   if strings.ToLower(resizeMode) == "fit" {
     return Fit
@@ -38,22 +32,13 @@ func get_resize_mode(resizeMode string) ResizeMethod {
   return Fit
 }
 
-func is_special_doc(path string) bool {
-  exts := []string{".pdf", ".xls", ".doc", ".ppt"}
-  for _, ext := range exts {
-    if strings.Contains(path, ext) {
-      return true
-    }
-  }
-
-  return false
+func command_exists(cmd string) bool {
+  _, err := exec.LookPath(cmd)
+  return err == nil
 }
 
-func get_img(path string, width int, height int, resizeMod string) image.Image {
-  var img image.Image
-
-  if is_special_doc(path) {
-    tmpDir, _ := os.MkdirTemp("", "tmp")
+func libre_command(path string, tmpDir string) (*exec.Cmd, bool) {
+  if command_exists("libreoffice") {
     cmd := exec.Command(
       "libreoffice",
       "--headless",
@@ -63,10 +48,52 @@ func get_img(path string, width int, height int, resizeMod string) image.Image {
       "--outdir",
       tmpDir,
     )
-    cmd.Run()
+    return cmd, true
+  }
+  if command_exists("soffice") {
+    cmd := exec.Command(
+      "soffice",
+      "--headless",
+      "--convert-to",
+      "png",
+      path,
+      "--outdir",
+      tmpDir,
+    )
+    return cmd, true
+  }
 
-    tmpFile := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)) + ".png"
-    path = filepath.Join(tmpDir, tmpFile)
+  return nil, false
+}
+
+func is_special_doc(path string) (string, bool) {
+  exts := []string{".pdf", ".xls", ".doc", ".ppt"}
+  for _, ext := range exts {
+    if strings.Contains(path, ext) {
+      tmpDir, _ := os.MkdirTemp("", "tmp")
+      cmd, libre_exists := libre_command(path, tmpDir)
+      if libre_exists {
+        cmd.Run()
+      } else {
+        return "", false
+      }
+
+      tmpFile := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)) + ".png"
+      path = filepath.Join(tmpDir, tmpFile)
+      return path, true
+    }
+  }
+
+  return path, true
+}
+
+func get_img(path string, width int, height int, resizeMod string) image.Image {
+  var img image.Image
+
+  path, backend_exists := is_special_doc(path)
+  if !backend_exists {
+    fmt.Println("can't preview documents, no supported backend is installed")
+    return nil
   }
 
   imgFile, err := os.Open(path)
