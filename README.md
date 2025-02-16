@@ -1,7 +1,12 @@
-# ttyimg 🔥  
-a simple cli tool for encoding images into iterm / kitty / sixel format  
+<h1 align="center">🔥ttyimg🔥</h1>  
+<div align="center">
+    
+![Stars](https://img.shields.io/github/stars/skardyy/ttyimg) ˙ ![License](https://img.shields.io/github/license/skardyy/ttyimg) ˙ ![Commit Activity](https://img.shields.io/github/languages/top/skardyy/ttyimg)
+</div>
 
-https://github.com/user-attachments/assets/f8cdff2e-fbfe-486f-84ba-330570a9e4de
+<h3 align="center">A simple cli tool for encoding images into iterm / kitty / sixel format.</h3> 
+
+https://github.com/user-attachments/assets/92b635e9-7ffe-4eed-8abe-a5d593504990
 
 ## Installation 📦
 ```sh
@@ -29,13 +34,21 @@ Usage: ttyimg [options] <path_to_image>
 - [X] TIFF  
 - [X] SVG  
 - [X] WEBP  
-
-> The following are supported but requires `Libreoffice`  
-> They will take longer, because the extra step of converting the doc into an image  
 - [X] DOCX  
 - [X] XLSX  
 - [X] PDF  
 - [X] PPTX  
+
+> DOCX, XLSX, PDF and PPTX require
+><details>
+>  <summary>Libreoffice</summary>
+> 
+>  ```txt
+>    make sure its installed and in your path  
+>    * in windows its called soffice and should be in C:\Program Files\LibreOffice\program 
+>    * linux should add it to path automatically
+>  ```
+> </details>
 
 > [!Note]  
 > i am open for suggestions on other backends for the document types  
