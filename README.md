@@ -1,11 +1,11 @@
-<h1 align="center">🔥ttyimg🔥</h1>  
+<h1 align="center">ttyimg</h1>  
+<p align="center">A simple cli tool for encoding images into iterm / kitty / sixel format.</p> 
 <div align="center">
     
-![Stars](https://img.shields.io/github/stars/skardyy/ttyimg) ˙ ![License](https://img.shields.io/github/license/skardyy/ttyimg) ˙ ![Commit Activity](https://img.shields.io/github/languages/top/skardyy/ttyimg)
+![Static Badge](https://img.shields.io/badge/ttyimg-%2300796b?style=flat&logo=educative&logoColor=%2300796b&label=viewing%20images&labelColor=%2315161b) ˙ [![Static Badge](https://img.shields.io/badge/go-%2300ADD8?style=flat&logo=go&logoColor=%2300ADD8&label=built%20with&labelColor=%2315161b)](https://go.dev/) ˙ ![GitHub License](https://img.shields.io/github/license/Skardyy/ttyimg?style=flat&labelColor=%2315161b&color=%234676C6)
 </div>
 
-<h3 align="center">A simple cli tool for encoding images into iterm / kitty / sixel format.</h3> 
-
+---
 https://github.com/user-attachments/assets/92b635e9-7ffe-4eed-8abe-a5d593504990
 
 ## Installation 📦
@@ -45,8 +45,8 @@ Usage: ttyimg [options] <path_to_image>
 > 
 >  ```txt
 >    make sure its installed and in your path  
->    * in windows its called soffice and should be in C:\Program Files\LibreOffice\program 
->    * linux should add it to path automatically
+>    * windows: in windows its called soffice and should be in C:\Program Files\LibreOffice\program 
+>    * linux: should add it to path automatically
 >  ```
 > </details>
 

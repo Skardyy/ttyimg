@@ -45,7 +45,7 @@ jobs:
               output="${output}.exe"
             fi
             echo "Building for $os/$arch..."
-            GOOS=$os GOARCH=$arch go build -o $output
+            GOOS=$os GOARCH=$arch go build -ldflags="-s -w" -o $output
           done
 
       - name: List Built Files
