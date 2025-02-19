@@ -15,7 +15,10 @@ require (
 )
 
 require (
+	github.com/gopherjs/gopherjs v0.0.0-20190411002643-bd77b112433e // indirect
+	github.com/gotk3/gotk3 v0.6.4 // indirect
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
+	github.com/therecipe/qt v0.0.0-20200904063919-c0c124a5770d // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
