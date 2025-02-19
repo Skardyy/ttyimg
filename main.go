@@ -14,7 +14,6 @@ import (
   "strings"
 
   "github.com/BourgeoisBear/rasterm"
-  "golang.org/x/term"
 )
 
 func main() {
@@ -24,7 +23,7 @@ func main() {
   var fallback string
   var resizeMode string
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
-  flag.StringVar(&fallback, "f", "none", "fallback to when no protocol is supported: kitty, iterm, sixel")
+  flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
   flag.IntVar(&width, "w", 0, "Resize width")
   flag.IntVar(&height, "h", 0, "Resize height")
@@ -45,6 +44,8 @@ func main() {
   useKitty := false
   useIterm := false
   useSixel := false
+
+  // checkDeviceDims()
 
   switch strings.ToLower(protocol) {
   case "kitty":
@@ -104,63 +105,27 @@ func NewBufferedWriter() *bufio.Writer {
   return bufio.NewWriterSize(os.Stdout, 64*1024) // 64 KB buffer
 }
 
-func checkDeviceAttrs() (bool, error) {
-  oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-  if err != nil {
-    return false, err
-  }
-  defer term.Restore(int(os.Stdin.Fd()), oldState)
-
-  // Send device attributes query
-  fmt.Fprint(os.Stdout, "\x1b[c")
-  os.Stdout.Sync()
-
-  response := ""
-  buf := make([]byte, 1)
-
-  // Read response until we get 'c'
-  for {
-    _, err := os.Stdin.Read(buf)
-    if err != nil {
-      return false, err
-    }
-    response += string(buf)
-    if buf[0] == 'c' {
-      break
-    }
-  }
-
-  return strings.Contains(response, ";4;") || strings.Contains(response, ";4c"), nil
-}
-
 func detect_cap(fallback string) (iterm bool, kitty bool, sixel bool) {
-  _, errWez := exec.LookPath("wezterm imgcat")
-  if errWez == nil {
-    return true, false, false
-  }
-
-  _, errKit := exec.LookPath("kitty icat")
-  if errKit == nil {
-    return false, true, false
-  }
+  _, errWez := exec.LookPath("wezterm")
+  _, errKit := exec.LookPath("kitty")
 
   isKittyCapable := rasterm.IsKittyCapable()
+  if isKittyCapable && errKit == nil {
+    return false, true, false
+  }
   isItermCapable := rasterm.IsItermCapable()
-  isSixelCapable, _ := rasterm.IsSixelCapable()
+  if isItermCapable && errWez == nil {
+    return true, false, false
+  }
+  isSixelCapable := false
 
-  if !isKittyCapable && !isItermCapable && !isSixelCapable {
-    if flag, _ := checkDeviceAttrs(); flag {
-      isSixelCapable = true
-    } else {
-      switch strings.ToLower(fallback) {
-      case "kitty":
-        isKittyCapable = true
-      case "iterm":
-        isItermCapable = true
-      case "sixel":
-        isSixelCapable = true
-      }
-    }
+  switch strings.ToLower(fallback) {
+  case "kitty":
+    isKittyCapable = true
+  case "iterm":
+    isItermCapable = true
+  case "sixel":
+    isSixelCapable = true
   }
 
   return isItermCapable, isKittyCapable, isSixelCapable
