@@ -15,7 +15,8 @@ require (
 )
 
 require (
+	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 )

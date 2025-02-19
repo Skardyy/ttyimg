@@ -45,7 +45,9 @@ func main() {
   useIterm := false
   useSixel := false
 
-  // checkDeviceDims()
+  tw, th := check_device_dims()
+  println(tw, th)
+  return
 
   switch strings.ToLower(protocol) {
   case "kitty":
