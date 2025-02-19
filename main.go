@@ -14,17 +14,28 @@ import (
   "strings"
 
   "github.com/BourgeoisBear/rasterm"
+  "github.com/boltdb/bolt"
 )
 
+var db, _ = bolt.Open("ttyimg_cache.db", 0600, nil)
+var bucket_name = []byte("documents")
+
 func main() {
+  defer db.Close()
+  db.Update(func(tx *bolt.Tx) error {
+    tx.CreateBucket(bucket_name)
+    return nil
+  })
   var width int
   var height int
   var protocol string
   var fallback string
   var resizeMode string
+  var cache bool
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
+  flag.BoolVar(&cache, "c", true, "rather or not to cache the heavy operations")
   flag.IntVar(&width, "w", 0, "Resize width")
   flag.IntVar(&height, "h", 0, "Resize height")
   flag.Parse()
@@ -36,7 +47,8 @@ func main() {
   }
   imgPath := flag.Args()[0]
 
-  resizedImg := get_img(imgPath, width, height, resizeMode)
+  resizedImg := get_img(imgPath, width, height, resizeMode, cache)
+
   if resizedImg == nil {
     return
   }
@@ -45,9 +57,8 @@ func main() {
   useIterm := false
   useSixel := false
 
-  tw, th := check_device_dims()
-  println(tw, th)
-  return
+  // tw, th := check_device_dims()
+  // println(tw, th)
 
   switch strings.ToLower(protocol) {
   case "kitty":
@@ -91,7 +102,6 @@ func main() {
     fmt.Fprintln(os.Stderr, "No capable terminal detected (Kitty, iTerm, or Sixel), and no protocol forced.")
     return
   }
-  writer.WriteString("\n")
 }
 
 func convertToPaletted(img image.Image) *image.Paletted {

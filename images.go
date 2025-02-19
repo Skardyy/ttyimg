@@ -6,12 +6,14 @@ import (
   "image"
   "image/color"
   "image/draw"
+  "image/png"
   "math"
   "os"
   "os/exec"
   "path/filepath"
   "strings"
 
+  "github.com/boltdb/bolt"
   "github.com/nfnt/resize"
   "github.com/srwiley/oksvg"
   "github.com/srwiley/rasterx"
@@ -66,7 +68,32 @@ func libre_command(path string, tmpDir string) (*exec.Cmd, bool) {
   return nil, false
 }
 
-func is_special_doc(path string) (string, bool) {
+func imageToBytes(img image.Image) []byte {
+  buf := bytes.Buffer{}
+  png.Encode(&buf, img)
+
+  return buf.Bytes()
+}
+func bytesToImage(bufBytes []byte) image.Image {
+  buf := bytes.NewBuffer(bufBytes)
+  img, _ := png.Decode(buf)
+  return img
+}
+
+func is_special_doc(path string, width int, height int, should_cache bool) (image.Image, bool) {
+  key := []byte(path)
+  var cachedImage []byte
+  // get cache
+  if should_cache {
+    db.View(func(tx *bolt.Tx) error {
+      cachedImage = tx.Bucket(bucket_name).Get(key)
+      return nil
+    })
+    if cachedImage != nil {
+      return bytesToImage(cachedImage), true
+    }
+  }
+
   exts := []string{".pdf", ".xls", ".doc", ".ppt"}
   for _, ext := range exts {
     if strings.Contains(path, ext) {
@@ -75,34 +102,46 @@ func is_special_doc(path string) (string, bool) {
       if libre_exists {
         cmd.Run()
       } else {
-        return "", false
+        return nil, false
       }
 
       tmpFile := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)) + ".png"
-      path = filepath.Join(tmpDir, tmpFile)
-      return path, true
+      new_path := filepath.Join(tmpDir, tmpFile)
+      img := read_img(new_path, width, height)
+      // put into cache
+      if should_cache {
+        db.Update(func(tx *bolt.Tx) error {
+          tx.Bucket(bucket_name).Put(key, imageToBytes(img))
+          return nil
+        })
+      }
+      return img, true
     }
   }
 
-  return path, true
+  return nil, true
 }
 
-func get_img(path string, width int, height int, resizeMod string) image.Image {
-  var img image.Image
-
-  path, backend_exists := is_special_doc(path)
-  if !backend_exists {
-    fmt.Println("can't preview documents, no supported backend is installed")
-    return nil
-  }
-
+func read_img(path string, width, height int) image.Image {
   imgFile, err := os.Open(path)
   if err != nil {
     fmt.Fprintf(os.Stderr, "Error opening image: %v\n", err)
     return nil
   }
   defer imgFile.Close()
-  img = get_content(imgFile, width, height)
+  return get_content(imgFile, width, height)
+}
+
+func get_img(path string, width int, height int, resizeMod string, cache bool) image.Image {
+  var img image.Image
+
+  img, backend_exists := is_special_doc(path, width, height, cache)
+  if !backend_exists {
+    fmt.Println("can't preview documents, no supported backend is installed")
+    return nil
+  } else if img == nil {
+    img = read_img(path, width, height)
+  }
 
   resizeMode := get_resize_mode(resizeMod)
   resizedImg, _ := ResizeImage(img, uint(width), uint(height), resizeMode)

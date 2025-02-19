@@ -6,6 +6,7 @@ import (
   "github.com/lxn/win"
 )
 
+// works everywhere
 func check_device_dims() (width, height int) {
   hWnd := win.GetForegroundWindow()
   if hWnd == 0 {
