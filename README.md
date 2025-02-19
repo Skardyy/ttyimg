@@ -2,7 +2,7 @@
 <p align="center">A simple cli tool for encoding images into iterm / kitty / sixel format.</p> 
 <div align="center">
     
-![Static Badge](https://img.shields.io/badge/ttyimg-%2300796b?style=flat&logo=educative&logoColor=%2300796b&label=viewing%20images&labelColor=%2315161b) ˙ [![Static Badge](https://img.shields.io/badge/go-%2300ADD8?style=flat&logo=go&logoColor=%2300ADD8&label=built%20with&labelColor=%2315161b)](https://go.dev/) ˙ ![GitHub License](https://img.shields.io/github/license/Skardyy/ttyimg?style=flat&labelColor=%2315161b&color=%234676C6)
+[![Static Badge](https://img.shields.io/badge/go.dev-00ADD8?style=flat&logo=go&logoColor=00ADD8&label=find%20at&labelColor=15161b)](https://pkg.go.dev/github.com/Skardyy/ttyimg)
 </div>
 
 ---
