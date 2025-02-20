@@ -3,8 +3,10 @@
 package main
 
 import (
-  "golang.org/x/sys/unix"
   "os"
+
+  "golang.org/x/sys/unix"
+  "golang.org/x/term"
 )
 
 // only reliable thing for linux at the moment
@@ -23,5 +25,9 @@ func check_device_dims() (width, height int) {
   return width, height
 }
 
-//TODO query from compositors the size
-// may not be viable in wayland
+func make_raw(fd int) func() {
+  oldstate, _ := term.MakeRaw(fd)
+  return func() {
+    term.Restore(fd, oldstate)
+  }
+}
