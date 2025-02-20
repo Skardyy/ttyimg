@@ -176,7 +176,7 @@ func queryTerminal(escapeSeq string) (string, error) {
   clean_func := make_raw(fd)
   defer clean_func()
 
-  fmt.Fprintf(os.Stdout, escapeSeq)
+  fmt.Fprintf(os.Stderr, escapeSeq)
 
   ch := make(chan string, 1)
   go func() {
