@@ -35,7 +35,7 @@ func main() {
   var center bool
   var cache bool
   flag.StringVar(&widthPre, "w", "80%", "Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
-  flag.StringVar(&heightPre, "h", "60%", "Resize height: 100 (pixels) / 100px / 100c (cells) / 100%")
+  flag.StringVar(&heightPre, "h", "60%", "Resize height: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
   flag.BoolVar(&center, "center", true, "rather or not to center align the image")
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")

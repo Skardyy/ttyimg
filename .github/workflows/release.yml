@@ -4,13 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - "main"
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
 
 permissions:
   contents: write 

@@ -22,7 +22,7 @@ Usage: ttyimg [options] <path_to_image>
   -w string
          Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>% (default: 80%)
   -h string
-         Resize height: 100 (pixels) / 100px / 100c (cells) / 100% (default: 60%)
+         Resize height: <number> (pixels) / <number>px / <number>c (cells) / <number>% (default: 60%)
   -m string
          the resize mode to use when resizing: Fit, Strech, Crop (default: Fit)
   -center bool
@@ -34,7 +34,7 @@ Usage: ttyimg [options] <path_to_image>
   -screen string
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw for fallback / overwrite (default: 1920x1080)
   -cache bool
-         rather or not to cache the heavy operations (default: true
+         rather or not to cache the heavy operations (default: true)
 ```
 
 ## Supports ✨  
@@ -62,3 +62,14 @@ Usage: ttyimg [options] <path_to_image>
 > [!Note]  
 > i am open for suggestions on other backends for the document types  
 > Libreoffice was chosen for it being the only crossplatform one  
+
+## App Logic  
+* first queries the size of the screen using `\033[14t` in case the terminal doesn't support it, fallbacks to:
+    *  unix: ioctl
+    *  windows: windows api
+    *  if neither works, uses the screen option as final fallback
+* then queries the size in cells (rows, cols)  
+
+> using those values we can use sizes  
+> like c (cells) and % for resizing the image  
+> and even center the image  
