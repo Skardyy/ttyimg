@@ -6,7 +6,6 @@ import (
   "image"
   "image/color"
   "image/draw"
-  "image/png"
   "math"
   "os"
   "os/exec"
@@ -14,7 +13,6 @@ import (
   "strings"
 
   "github.com/boltdb/bolt"
-  "github.com/nfnt/resize"
   "github.com/srwiley/oksvg"
   "github.com/srwiley/rasterx"
   "golang.org/x/image/tiff"
@@ -66,18 +64,6 @@ func libre_command(path string, tmpDir string) (*exec.Cmd, bool) {
   }
 
   return nil, false
-}
-
-func imageToBytes(img image.Image) []byte {
-  buf := bytes.Buffer{}
-  png.Encode(&buf, img)
-
-  return buf.Bytes()
-}
-func bytesToImage(bufBytes []byte) image.Image {
-  buf := bytes.NewBuffer(bufBytes)
-  img, _ := png.Decode(buf)
-  return img
 }
 
 func is_special_doc(path string, width int, height int, should_cache bool) (image.Image, bool) {
@@ -132,8 +118,9 @@ func read_img(path string, width, height int) image.Image {
   return get_content(imgFile, width, height)
 }
 
-func get_img(path string, width int, height int, resizeMod string, cache bool) image.Image {
+func get_img(path string, widthDm Dimension, heightDm Dimension, resizeMod string, cache bool, sSize ScreenSize) image.Image {
   var img image.Image
+  width, height := widthDm.GetPixel(sSize), heightDm.GetPixel(sSize)
 
   img, backend_exists := is_special_doc(path, width, height, cache)
   if !backend_exists {
@@ -148,7 +135,7 @@ func get_img(path string, width int, height int, resizeMod string, cache bool) i
   return resizedImg
 }
 
-func get_content(file *os.File, width int, height int) image.Image {
+func get_content(file *os.File, width, height int) image.Image {
   name := file.Name()
   if height == width && width == 0 {
     width = 200
@@ -205,14 +192,6 @@ func get_content(file *os.File, width int, height int) image.Image {
   }
 }
 
-type ResizeMethod string
-
-const (
-  Stretch ResizeMethod = "Stretch"
-  Crop    ResizeMethod = "Crop"
-  Fit     ResizeMethod = "Fit"
-)
-
 func computeDimensions(origW, origH int, width, height uint) (uint, uint) {
   if width == 0 && height == 0 {
     return uint(origW), uint(origH)
@@ -227,53 +206,4 @@ func computeDimensions(origW, origH int, width, height uint) (uint, uint) {
     return width, uint(math.Round(float64(width) * (float64(origH) / float64(origW))))
   }
   return width, height
-}
-
-func ResizeImage(img image.Image, width, height uint, method ResizeMethod) (image.Image, error) {
-  bounds := img.Bounds()
-  srcWidth := bounds.Dx()
-  srcHeight := bounds.Dy()
-  width, height = computeDimensions(srcWidth, srcHeight, width, height)
-  switch method {
-  case Fit:
-    return resize.Thumbnail(width, height, img, resize.Lanczos3), nil
-  case Stretch:
-    // Resize without preserving the aspect ratio
-    return resize.Resize(width, height, img, resize.Lanczos3), nil
-  case Crop:
-    // Crop the image to the specified dimensions
-    cropped := cropImage(img, int(width), int(height))
-    return cropped, nil
-  default:
-    return nil, fmt.Errorf("unsupported resize method: %s", method)
-  }
-}
-
-// cropImage crops the image to the specified width and height
-func cropImage(img image.Image, width, height int) image.Image {
-  srcBounds := img.Bounds()
-  srcWidth := srcBounds.Dx()
-  srcHeight := srcBounds.Dy()
-
-  // Calculate cropping dimensions
-  var cropWidth, cropHeight int
-  if float64(srcWidth)/float64(width) > float64(srcHeight)/float64(height) {
-    cropWidth = int(float64(srcHeight) * float64(width) / float64(height))
-    cropHeight = srcHeight
-  } else {
-    cropWidth = srcWidth
-    cropHeight = int(float64(srcWidth) * float64(height) / float64(width))
-  }
-
-  // Calculate cropping offsets
-  offsetX := (srcWidth - cropWidth) / 2
-  offsetY := (srcHeight - cropHeight) / 2
-
-  // Crop the image
-  cropped := img.(interface {
-    SubImage(r image.Rectangle) image.Image
-  }).SubImage(image.Rect(offsetX, offsetY, offsetX+cropWidth, offsetY+cropHeight))
-
-  // Resize the cropped image to the target dimensions
-  return resize.Resize(uint(width), uint(height), cropped, resize.Lanczos3)
 }
