@@ -35,6 +35,7 @@ jobs:
             "linux/arm64"
             "linux/arm"
             "windows/amd64"
+            "windows/arm64"
             "windows/386"
             "darwin/amd64"
             "darwin/arm64"
