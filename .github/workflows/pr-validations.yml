@@ -1,17 +1,9 @@
-name: Build and Release TTYImg
+name: Build CI-CD
 
 on:
-  push:
-    branches:
-      - "main"
   pull_request:
     branches:
       - main
-    types:
-      - closed
-
-permissions:
-  contents: write 
 
 jobs:
   build-and-release:
@@ -53,20 +45,3 @@ jobs:
 
       - name: List Built Files
         run: ls -lh bin
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: TTYImg ${{ github.ref_name }}
-          body: |
-            This release contains precompiled binaries for the following platforms:
-            - Linux (amd64, arm64, arm)
-            - Windows (amd64, 386)
-            - macOS (amd64, arm64)
-          draft: false
-          prerelease: false
-          overwrite: true
-          files: bin/*

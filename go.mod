@@ -8,14 +8,16 @@ require (
 )
 
 require (
+	github.com/boltdb/bolt v1.3.1
+	github.com/lxn/win v0.0.0-20210218163916-a377121e959e
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20210519020934-456a8d69b780
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
+	golang.org/x/sys v0.30.0
 	golang.org/x/term v0.18.0
 )
 
 require (
 	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 )

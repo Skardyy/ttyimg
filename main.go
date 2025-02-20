@@ -14,30 +14,70 @@ import (
   "strings"
 
   "github.com/BourgeoisBear/rasterm"
-  "golang.org/x/term"
+  "github.com/boltdb/bolt"
 )
 
+var db, _ = bolt.Open("ttyimg_cache.db", 0600, nil)
+var bucket_name = []byte("documents")
+
 func main() {
-  var width int
-  var height int
+  defer db.Close()
+  db.Update(func(tx *bolt.Tx) error {
+    tx.CreateBucket(bucket_name)
+    return nil
+  })
+  var widthPre string
+  var heightPre string
   var protocol string
   var fallback string
   var resizeMode string
-  flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
-  flag.StringVar(&fallback, "f", "none", "fallback to when no protocol is supported: kitty, iterm, sixel")
+  var screenSize string
+  var center bool
+  var cache bool
+  var forceScreen bool
+  flag.StringVar(&widthPre, "w", "0", "Resize width: 100 (pixels) / 100px / 100c (cells) / 100%")
+  flag.StringVar(&heightPre, "h", "0", "Resize height: 100 (pixels) / 100px / 100c (cells) / 100%")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
-  flag.IntVar(&width, "w", 0, "Resize width")
-  flag.IntVar(&height, "h", 0, "Resize height")
+  flag.BoolVar(&center, "center", false, "rather or not to center align the image")
+  flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
+  flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
+  flag.StringVar(&screenSize, "screen", "1920x1080", "what to use as fallback if the app fails to query the size by itself")
+  flag.BoolVar(&forceScreen, "forceScreen", false, "rather or not to force the screen size and not attempt to query")
+  flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
+
+  flag.Usage = func() {
+    blue := "\033[34m"
+    reset := "\033[0m"
+    green := "\033[32m"
+    purple := "\033[35m"
+    yellow := "\033[33m"
+    fmt.Fprintln(os.Stderr, purple+"Usage: ttyimg [options] <path_to_image>"+reset)
+    order := []string{"w", "h", "m", "center", "p", "f", "screen", "forceScreen", "cache"}
+    for _, key := range order {
+      f := flag.Lookup(key)
+      fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)
+      fmt.Fprintln(os.Stderr, "        ", flag.Lookup(key).Usage, yellow+"(default:", f.DefValue+")"+reset)
+    }
+  }
   flag.Parse()
 
   if len(flag.Args()) < 1 {
-    fmt.Fprintln(os.Stderr, "Usage: ttyimg [options] <path_to_image>")
-    flag.PrintDefaults()
+    flag.Usage()
+    return
+  }
+  width, errWidth := ParseDimension(widthPre)
+  width.direction = X
+  height, errHeight := ParseDimension(heightPre)
+  height.direction = Y
+  if errWidth != nil || errHeight != nil {
     return
   }
   imgPath := flag.Args()[0]
 
-  resizedImg := get_img(imgPath, width, height, resizeMode)
+  sSize := ScreenSize{}
+  sSize.query(screenSize, forceScreen)
+  resizedImg := get_img(imgPath, width, height, resizeMode, cache, sSize)
+
   if resizedImg == nil {
     return
   }
@@ -63,6 +103,12 @@ func main() {
 
   writer := NewBufferedWriter()
   defer writer.Flush()
+
+  var offsetX int
+  if center {
+    offsetX, _ = CenterImage(resizedImg, sSize)
+    writer.WriteString(strings.Repeat(" ", offsetX))
+  }
 
   if useIterm {
     err := rasterm.ItermWriteImage(writer, resizedImg)
@@ -104,64 +150,38 @@ func NewBufferedWriter() *bufio.Writer {
   return bufio.NewWriterSize(os.Stdout, 64*1024) // 64 KB buffer
 }
 
-func checkDeviceAttrs() (bool, error) {
-  oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-  if err != nil {
-    return false, err
-  }
-  defer term.Restore(int(os.Stdin.Fd()), oldState)
-
-  // Send device attributes query
-  fmt.Fprint(os.Stdout, "\x1b[c")
-  os.Stdout.Sync()
-
-  response := ""
-  buf := make([]byte, 1)
-
-  // Read response until we get 'c'
-  for {
-    _, err := os.Stdin.Read(buf)
-    if err != nil {
-      return false, err
-    }
-    response += string(buf)
-    if buf[0] == 'c' {
-      break
-    }
-  }
-
-  return strings.Contains(response, ";4;") || strings.Contains(response, ";4c"), nil
-}
-
 func detect_cap(fallback string) (iterm bool, kitty bool, sixel bool) {
-  _, errWez := exec.LookPath("wezterm imgcat")
-  if errWez == nil {
-    return true, false, false
-  }
-
-  _, errKit := exec.LookPath("kitty icat")
-  if errKit == nil {
-    return false, true, false
-  }
+  _, errWez := exec.LookPath("wezterm")
+  _, errKit := exec.LookPath("kitty")
 
   isKittyCapable := rasterm.IsKittyCapable()
+  if isKittyCapable && errKit == nil {
+    return false, true, false
+  }
   isItermCapable := rasterm.IsItermCapable()
-  isSixelCapable, _ := rasterm.IsSixelCapable()
+  if isItermCapable && errWez == nil {
+    return true, false, false
+  }
+  isSixelCapable := false
 
-  if !isKittyCapable && !isItermCapable && !isSixelCapable {
-    if flag, _ := checkDeviceAttrs(); flag {
-      isSixelCapable = true
-    } else {
-      switch strings.ToLower(fallback) {
-      case "kitty":
-        isKittyCapable = true
-      case "iterm":
-        isItermCapable = true
-      case "sixel":
-        isSixelCapable = true
-      }
-    }
+  switch strings.ToLower(fallback) {
+  case "kitty":
+    isKittyCapable = true
+  case "iterm":
+    isItermCapable = true
+  case "sixel":
+    isSixelCapable = true
   }
 
   return isItermCapable, isKittyCapable, isSixelCapable
+}
+
+func determineType(value string) string {
+  valueLower := strings.ToLower(value)
+
+  if valueLower == "true" || valueLower == "false" {
+    return "bool"
+  }
+
+  return "string"
 }

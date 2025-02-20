@@ -1,8 +1,11 @@
 <h1 align="center">ttyimg</h1>  
-<p align="center">A simple cli tool for encoding images into iterm / kitty / sixel format.</p> 
+<p align="center">🖼️ A simple cli tool for encoding images into <b>Iterm2 / Kitty / Sixel</b> 🖼️</p> 
 <div align="center">
     
-[![Static Badge](https://img.shields.io/badge/go.dev-00ADD8?style=flat&logo=go&logoColor=00ADD8&label=find%20at&labelColor=15161b)](https://pkg.go.dev/github.com/Skardyy/ttyimg)
+
+[![Static Badge](https://img.shields.io/badge/go.dev-1e2029?style=flat&logo=go&logoColor=00ADD8&label=find%20at&labelColor=15161b)](https://pkg.go.dev/github.com/Skardyy/ttyimg) ˙ ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Skardyy/ttyimg/release.yml?style=flat&labelColor=15161b&color=1e2029)
+
+
 </div>
 
 ---
@@ -16,16 +19,24 @@ go install github.com/Skardyy/ttyimg@latest
 ## Usuage 💡  
 ```sh
 Usage: ttyimg [options] <path_to_image>
-  -f string
-        fallback to when no protocol is supported: kitty, iterm, sixel (default "none")
-  -h int
-        Resize height
+  -w string
+         Resize width: 100 (pixels) / 100px / 100c (cells) / 100% (default: 0)
+  -h string
+         Resize height: 100 (pixels) / 100px / 100c (cells) / 100% (default: 0)
   -m string
-        the resize mode to use when resizing: Fit, Strech, Crop (default "Fit")
+         the resize mode to use when resizing: Fit, Strech, Crop (default: Fit)
+  -center bool
+         rather or not to center align the image (default: false)
   -p string
-        Force protocol: kitty, iterm, sixel (default "auto")
-  -w int
-        Resize width
+         Force protocol: kitty, iterm, sixel (default: auto)
+  -f string
+         fallback to when no protocol is supported: kitty, iterm, sixel (default: sixel)
+  -screen string
+         what to use as fallback if the app fails to query the size by itself (default: 1920x1080)
+  -forceScreen bool
+         rather or not to force the screen size and not attempt to query (default: false)
+  -cache bool
+         rather or not to cache the heavy operations (default: true)
 ```
 
 ## Supports ✨  
