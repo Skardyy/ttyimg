@@ -2,6 +2,8 @@ name: Build and Release TTYImg
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
       - "main"
   pull_request:
@@ -60,13 +62,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: TTYImg ${{ github.ref_name }}
+          name: TTYImg ${{ github.ref_name }}
           body: |
             This release contains precompiled binaries for the following platforms:
             - Linux (amd64, arm64, arm)
-            - Windows (amd64, 386)
+            - Windows (amd64, arm64, 386)
             - macOS (amd64, arm64)
           draft: false
           prerelease: false
-          overwrite: true
+          generate_release_notes: true
           files: bin/*
