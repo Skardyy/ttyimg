@@ -1,0 +1,46 @@
+name: Build CI-CD
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    name: Build and Release Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23.4"
+
+      - name: Build Binaries
+        run: |
+          mkdir -p bin
+          platforms=(
+            "linux/amd64"
+            "linux/arm64"
+            "linux/arm"
+            "windows/amd64"
+            "windows/386"
+            "darwin/amd64"
+            "darwin/arm64"
+          )
+          for platform in "${platforms[@]}"; do
+            os=$(echo $platform | cut -d'/' -f1)
+            arch=$(echo $platform | cut -d'/' -f2)
+            output="bin/ttyimg-${os}-${arch}"
+            if [ "$os" == "windows" ]; then
+              output="${output}.exe"
+            fi
+            echo "Building for $os/$arch..."
+            GOOS=$os GOARCH=$arch go build -ldflags="-s -w" -o $output
+          done
+
+      - name: List Built Files
+        run: ls -lh bin
