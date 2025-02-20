@@ -88,5 +88,12 @@ func CenterImage(img image.Image, sSize ScreenSize) (offsetX, offsetY int) {
   // in cells
   offsetX = offsetX / (sSize.widthPx / sSize.widthCell)
   offsetY = offsetY / (sSize.heightPx / sSize.heightCell)
+
+  if offsetY < 0 {
+    offsetY = 0
+  }
+  if offsetX < 0 {
+    offsetX = 0
+  }
   return
 }

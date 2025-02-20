@@ -8,7 +8,7 @@ import (
 )
 
 // only reliable thing for linux at the moment
-func getOscSeq() (width, height int) {
+func getIoCtlSize() (width, height int) {
   ws, err := unix.IoctlGetWinsize(int(os.Stdout.Fd()), unix.TIOCGWINSZ)
   if err != nil {
     return 0, 0
@@ -18,7 +18,10 @@ func getOscSeq() (width, height int) {
 }
 
 func check_device_dims() (width, height int) {
-  width, height = getOscSeq()
+  width, height = getIoCtlSize()
 
   return width, height
 }
+
+//TODO query from compositors the size
+// may not be viable in wayland

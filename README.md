@@ -20,23 +20,21 @@ go install github.com/Skardyy/ttyimg@latest
 ```sh
 Usage: ttyimg [options] <path_to_image>
   -w string
-         Resize width: 100 (pixels) / 100px / 100c (cells) / 100% (default: 0)
+         Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>% (default: 80%)
   -h string
-         Resize height: 100 (pixels) / 100px / 100c (cells) / 100% (default: 0)
+         Resize height: 100 (pixels) / 100px / 100c (cells) / 100% (default: 60%)
   -m string
          the resize mode to use when resizing: Fit, Strech, Crop (default: Fit)
   -center bool
-         rather or not to center align the image (default: false)
+         rather or not to center align the image (default: true)
   -p string
          Force protocol: kitty, iterm, sixel (default: auto)
   -f string
          fallback to when no protocol is supported: kitty, iterm, sixel (default: sixel)
   -screen string
-         what to use as fallback if the app fails to query the size by itself (default: 1920x1080)
-  -forceScreen bool
-         rather or not to force the screen size and not attempt to query (default: false)
+         <width>x<height> or <width>x<height>xForce. specify the size of the winodw for fallback / overwrite (default: 1920x1080)
   -cache bool
-         rather or not to cache the heavy operations (default: true)
+         rather or not to cache the heavy operations (default: true
 ```
 
 ## Supports ✨  

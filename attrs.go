@@ -6,6 +6,7 @@ import (
   "regexp"
   "strconv"
   "strings"
+  "time"
 
   "golang.org/x/term"
 )
@@ -37,10 +38,34 @@ type ScreenSize struct {
   heightCell int
 }
 
-func (s *ScreenSize) query(fallback string, forceScreen bool) {
-  s.widthPx, s.heightPx = check_device_dims()
-  if s.widthPx == 0 || forceScreen {
-    // fallback because failed to query
+func get_size_osc() (int, int, error) {
+  response, err := queryTerminal("\033[14t")
+  if err != nil {
+    return 0, 0, err
+  }
+
+  //\x1b[4;680;1550t
+  parts := strings.Split(response, ";")
+  height, _ := strconv.Atoi(parts[1])
+  width, _ := strconv.Atoi(strings.Replace(parts[2], "t", "", 1))
+
+  return width, height, nil
+}
+
+func (s *ScreenSize) query(fallback string) {
+  force := strings.Contains(strings.ToLower(fallback), "force")
+
+  // attempt to query when not forced
+  if !force {
+    var err error
+    s.widthPx, s.heightPx, err = get_size_osc()
+    if err != nil {
+      s.widthPx, s.heightPx = check_device_dims()
+    }
+  }
+
+  // forced or failed to query
+  if s.widthPx == 0 || force {
     parts := strings.Split(fallback, "x")
     s.widthPx, _ = strconv.Atoi(parts[0])
     s.heightPx, _ = strconv.Atoi(parts[1])
@@ -107,4 +132,35 @@ func ParseDimension(input string) (Dimension, error) {
   }
 
   return dimension, nil
+}
+
+// sends osc and waits max 200ms for the res
+func queryTerminal(escapeSeq string) (string, error) {
+  fd := int(os.Stdin.Fd())
+  oldState, err := term.MakeRaw(fd)
+  if err != nil {
+    return "", err
+  }
+  defer term.Restore(fd, oldState)
+
+  fmt.Fprint(os.Stdout, escapeSeq)
+
+  responseChan := make(chan string, 1)
+
+  go func() {
+    buf := make([]byte, 32)
+    n, err := os.Stdin.Read(buf)
+    if err == nil {
+      responseChan <- string(buf[:n])
+    } else {
+      responseChan <- ""
+    }
+  }()
+
+  select {
+  case response := <-responseChan:
+    return response, nil
+  case <-time.After(200 * time.Millisecond):
+    return "", fmt.Errorf("timeout waiting for response")
+  }
 }

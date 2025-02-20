@@ -34,15 +34,13 @@ func main() {
   var screenSize string
   var center bool
   var cache bool
-  var forceScreen bool
-  flag.StringVar(&widthPre, "w", "0", "Resize width: 100 (pixels) / 100px / 100c (cells) / 100%")
-  flag.StringVar(&heightPre, "h", "0", "Resize height: 100 (pixels) / 100px / 100c (cells) / 100%")
+  flag.StringVar(&widthPre, "w", "80%", "Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
+  flag.StringVar(&heightPre, "h", "60%", "Resize height: 100 (pixels) / 100px / 100c (cells) / 100%")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
-  flag.BoolVar(&center, "center", false, "rather or not to center align the image")
+  flag.BoolVar(&center, "center", true, "rather or not to center align the image")
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
-  flag.StringVar(&screenSize, "screen", "1920x1080", "what to use as fallback if the app fails to query the size by itself")
-  flag.BoolVar(&forceScreen, "forceScreen", false, "rather or not to force the screen size and not attempt to query")
+  flag.StringVar(&screenSize, "screen", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw for fallback / overwrite")
   flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
 
   flag.Usage = func() {
@@ -52,7 +50,7 @@ func main() {
     purple := "\033[35m"
     yellow := "\033[33m"
     fmt.Fprintln(os.Stderr, purple+"Usage: ttyimg [options] <path_to_image>"+reset)
-    order := []string{"w", "h", "m", "center", "p", "f", "screen", "forceScreen", "cache"}
+    order := []string{"w", "h", "m", "center", "p", "f", "screen", "cache"}
     for _, key := range order {
       f := flag.Lookup(key)
       fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)
@@ -75,7 +73,7 @@ func main() {
   imgPath := flag.Args()[0]
 
   sSize := ScreenSize{}
-  sSize.query(screenSize, forceScreen)
+  sSize.query(screenSize)
   resizedImg := get_img(imgPath, width, height, resizeMode, cache, sSize)
 
   if resizedImg == nil {
