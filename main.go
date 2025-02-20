@@ -24,14 +24,17 @@ func get_db_loc() string {
   return filepath.Join(exeDir, "ttyimg_cache.db")
 }
 
+var logger = Logger{}
 var db_loc = get_db_loc()
 var db, _ = bolt.Open(db_loc, 0600, nil)
 var bucket_name = []byte("documents")
 
 func main() {
+  logger.Init(get_log_path(), true)
+  defer logger.Close()
   defer db.Close()
   db.Update(func(tx *bolt.Tx) error {
-    tx.CreateBucket(bucket_name)
+    tx.CreateBucketIfNotExists(bucket_name)
     return nil
   })
   var widthPre string
@@ -39,7 +42,8 @@ func main() {
   var protocol string
   var fallback string
   var resizeMode string
-  var screenSize string
+  var screenSizePx string
+  var screenSizeCell string
   var center bool
   var cache bool
   flag.StringVar(&widthPre, "w", "80%", "Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
@@ -48,7 +52,8 @@ func main() {
   flag.BoolVar(&center, "center", true, "rather or not to center align the image")
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
-  flag.StringVar(&screenSize, "screen", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw for fallback / overwrite")
+  flag.StringVar(&screenSizePx, "spx", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite")
+  flag.StringVar(&screenSizeCell, "cpx", "120x30", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite")
   flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
 
   flag.Usage = func() {
@@ -58,7 +63,7 @@ func main() {
     purple := "\033[35m"
     yellow := "\033[33m"
     fmt.Fprintln(os.Stderr, purple+"Usage: ttyimg [options] <path_to_image>"+reset)
-    order := []string{"w", "h", "m", "center", "p", "f", "screen", "cache"}
+    order := []string{"w", "h", "m", "center", "p", "f", "spx", "cpx", "cache"}
     for _, key := range order {
       f := flag.Lookup(key)
       fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)
@@ -81,7 +86,7 @@ func main() {
   imgPath := flag.Args()[0]
 
   sSize := ScreenSize{}
-  sSize.query(screenSize)
+  sSize.query(screenSizePx, screenSizePx)
   resizedImg := get_img(imgPath, width, height, resizeMode, cache, sSize)
 
   if resizedImg == nil {

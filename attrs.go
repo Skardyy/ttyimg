@@ -1,6 +1,7 @@
 package main
 
 import (
+  "bufio"
   "fmt"
   "os"
   "regexp"
@@ -52,26 +53,61 @@ func get_size_osc() (int, int, error) {
   return width, height, nil
 }
 
-func (s *ScreenSize) query(fallback string) {
-  force := strings.Contains(strings.ToLower(fallback), "force")
+func get_size_cells(cellHandler *string) (int, int, error) {
+  response, err := queryTerminal("\033[18t")
+  if err != nil {
+    fd := int(os.Stdout.Fd())
+    widthCell, heightCell, err := term.GetSize(fd)
+    *cellHandler = "go term"
+    return widthCell, heightCell, err
+  }
 
-  // attempt to query when not forced
-  if !force {
+  //[8;36;172t
+  parts := strings.Split(response, ";")
+  height, _ := strconv.Atoi(parts[1])
+  width, _ := strconv.Atoi(strings.Replace(parts[2], "t", "", 1))
+  *cellHandler = "osc"
+
+  return width, height, nil
+}
+
+func (s *ScreenSize) query(fallbackPx string, fallbackCell string) {
+  forcePx := strings.Contains(strings.ToLower(fallbackPx), "force")
+  forceCell := strings.Contains(strings.ToLower(fallbackCell), "force")
+  hanlderPx := ""
+  handlerCell := ""
+
+  // attempt to query px when not forced
+  if !forcePx {
     var err error
     s.widthPx, s.heightPx, err = get_size_osc()
+    hanlderPx = "osc"
     if err != nil {
       s.widthPx, s.heightPx = check_device_dims()
+      hanlderPx = "win api or ioctl"
     }
   }
 
-  // forced or failed to query
-  if s.widthPx == 0 || force {
-    parts := strings.Split(fallback, "x")
+  // forced or failed to query px
+  if s.widthPx == 0 || forcePx {
+    parts := strings.Split(fallbackPx, "x")
     s.widthPx, _ = strconv.Atoi(parts[0])
     s.heightPx, _ = strconv.Atoi(parts[1])
+    hanlderPx = "fallback"
   }
-  fd := int(os.Stdout.Fd())
-  s.widthCell, s.heightCell, _ = term.GetSize(fd)
+
+  var err error
+  // forced or failed to query cells
+  s.widthCell, s.heightCell, err = get_size_cells(&handlerCell)
+  if err != nil || forceCell {
+    parts := strings.Split(fallbackCell, "x")
+    s.widthCell, _ = strconv.Atoi(parts[0])
+    s.heightCell, _ = strconv.Atoi(parts[1])
+    handlerCell = "fallback"
+  }
+
+  logMsg := fmt.Sprintf("px handler: <%s> gave %dx%d\n    cell handler: <%s> gave %dx%d\n    forcePx: %t\n    forceCell: %t", hanlderPx, s.widthPx, s.heightPx, handlerCell, s.widthCell, s.heightCell, forcePx, forceCell)
+  logger.Write(logMsg)
 }
 
 func (dm *Dimension) GetPixel(screenSize ScreenSize) int {
@@ -137,30 +173,22 @@ func ParseDimension(input string) (Dimension, error) {
 // sends osc and waits max 200ms for the res
 func queryTerminal(escapeSeq string) (string, error) {
   fd := int(os.Stdin.Fd())
-  oldState, err := term.MakeRaw(fd)
-  if err != nil {
-    return "", err
-  }
-  defer term.Restore(fd, oldState)
+  clean_func := make_raw(fd)
+  defer clean_func()
 
-  fmt.Fprint(os.Stdout, escapeSeq)
+  fmt.Fprintf(os.Stderr, escapeSeq)
 
-  responseChan := make(chan string, 1)
-
+  ch := make(chan string, 1)
   go func() {
-    buf := make([]byte, 32)
-    n, err := os.Stdin.Read(buf)
-    if err == nil {
-      responseChan <- string(buf[:n])
-    } else {
-      responseChan <- ""
-    }
+    reader := bufio.NewReader(os.Stdin)
+    response, _ := reader.ReadString('t')
+    ch <- response
   }()
 
   select {
-  case response := <-responseChan:
+  case response := <-ch:
     return response, nil
-  case <-time.After(200 * time.Millisecond):
-    return "", fmt.Errorf("timeout waiting for response")
+  case <-time.After(50 * time.Millisecond):
+    return "", fmt.Errorf("timeout waiting for terminal response")
   }
 }

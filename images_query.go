@@ -124,7 +124,7 @@ func get_img(path string, widthDm Dimension, heightDm Dimension, resizeMod strin
 
   img, backend_exists := is_special_doc(path, width, height, cache)
   if !backend_exists {
-    fmt.Println("can't preview documents, no supported backend is installed")
+    fmt.Fprintln(os.Stderr, "can't preview documents, no supported backend is installed")
     return nil
   } else if img == nil {
     img = read_img(path, width, height)

@@ -1,5 +1,5 @@
 <h1 align="center">ttyimg</h1>  
-<p align="center">🖼️ A simple cli tool for encoding images into <b>Iterm2 / Kitty / Sixel</b> 🖼️</p> 
+<p align="center">🖼️ Apowerfull cli tool for encoding images into <b>Iterm2 / Kitty / Sixel</b> 🖼️</p> 
 <div align="center">
     
 
@@ -31,8 +31,10 @@ Usage: ttyimg [options] <path_to_image>
          Force protocol: kitty, iterm, sixel (default: auto)
   -f string
          fallback to when no protocol is supported: kitty, iterm, sixel (default: sixel)
-  -screen string
-         <width>x<height> or <width>x<height>xForce. specify the size of the winodw for fallback / overwrite (default: 1920x1080)
+  -spx string
+         <width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite (default: 1920x1080)
+  -cpx string
+         <width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite (default: 120x30)
   -cache bool
          rather or not to cache the heavy operations (default: true)
 ```
@@ -69,6 +71,12 @@ Usage: ttyimg [options] <path_to_image>
     *  windows: windows api
     *  if neither works, uses the screen option as final fallback
 * then queries the size in cells (rows, cols)  
+    *  it too tries sending `\033[18t`  
+    *  fallbacks into go term query (never really fails)  
+    *  but still have fallback just in case, also can be forced for emulated terminals  
+
+Those options e.g (spx, cpx) aren't really important for normal users.  
+but can be very powerfull for power users trying to call the program in emulated environments, like neovim \ tmux.  
 
 > using those values we can use sizes  
 > like c (cells) and % for resizing the image  

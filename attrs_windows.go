@@ -1,7 +1,8 @@
 package main
 
 import (
-  "fmt"
+  "syscall"
+  "unsafe"
 
   "github.com/lxn/win"
 )
@@ -10,14 +11,12 @@ import (
 func check_device_dims() (width, height int) {
   hWnd := win.GetForegroundWindow()
   if hWnd == 0 {
-    fmt.Println("No foreground window found.")
     return 0, 0
   }
 
   // get client size
   var rect win.RECT
   if !win.GetClientRect(hWnd, &rect) {
-    fmt.Println("Error retrieving window rectangle.")
     return 0, 0
   }
 
@@ -37,4 +36,50 @@ func check_device_dims() (width, height int) {
   logicalHeight := int(rect.Bottom-rect.Top) - int(frame_height)
 
   return logicalWidth, logicalHeight
+}
+
+var (
+  kernel32 = syscall.NewLazyDLL("kernel32.dll")
+
+  getConsoleMode = kernel32.NewProc("GetConsoleMode")
+  setConsoleMode = kernel32.NewProc("SetConsoleMode")
+  getStdHandle   = kernel32.NewProc("GetStdHandle")
+)
+
+const (
+  STD_INPUT_HANDLE = -10
+
+  ENABLE_ECHO_INPUT             = 0x4
+  ENABLE_LINE_INPUT             = 0x2
+  ENABLE_PROCESSED_INPUT        = 0x1
+  ENABLE_WINDOW_INPUT           = 0x8
+  ENABLE_MOUSE_INPUT            = 0x10
+  ENABLE_VIRTUAL_TERMINAL_INPUT = 0x200
+)
+
+func make_raw(fd int) func() {
+  // Convert fd to Windows handle
+  handle := syscall.Handle(fd)
+
+  // Get the current console mode
+  var originalMode uint32
+  getConsoleMode.Call(uintptr(handle), uintptr(unsafe.Pointer(&originalMode)))
+
+  // Set raw mode by disabling processing flags
+  rawMode := originalMode &^ (ENABLE_ECHO_INPUT |
+    ENABLE_LINE_INPUT |
+    ENABLE_MOUSE_INPUT |
+    ENABLE_WINDOW_INPUT |
+    ENABLE_PROCESSED_INPUT)
+
+  // Enable virtual terminal input
+  rawMode |= ENABLE_VIRTUAL_TERMINAL_INPUT
+
+  // Apply the new mode
+  setConsoleMode.Call(uintptr(handle), uintptr(rawMode))
+
+  // Return cleanup function
+  return func() {
+    setConsoleMode.Call(uintptr(handle), uintptr(originalMode))
+  }
 }
