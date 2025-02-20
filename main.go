@@ -11,13 +11,21 @@ import (
   _ "image/png"
   "os"
   "os/exec"
+  "path/filepath"
   "strings"
 
   "github.com/BourgeoisBear/rasterm"
   "github.com/boltdb/bolt"
 )
 
-var db, _ = bolt.Open("ttyimg_cache.db", 0600, nil)
+func get_db_loc() string {
+  exePath, _ := os.Executable()
+  exeDir := filepath.Dir(exePath)
+  return filepath.Join(exeDir, "ttyimg_cache.db")
+}
+
+var db_loc = get_db_loc()
+var db, _ = bolt.Open(db_loc, 0600, nil)
 var bucket_name = []byte("documents")
 
 func main() {
