@@ -52,7 +52,7 @@ func main() {
   flag.StringVar(&protocol, "p", "auto", "Force protocol: kitty, iterm, sixel")
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
   flag.StringVar(&screenSizePx, "spx", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite")
-  flag.StringVar(&screenSizeCell, "cpx", "120x30", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite")
+  flag.StringVar(&screenSizeCell, "sc", "120x30", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite")
   flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
 
   flag.Usage = func() {
@@ -62,7 +62,7 @@ func main() {
     purple := "\033[35m"
     yellow := "\033[33m"
     fmt.Fprintln(os.Stderr, purple+"Usage: ttyimg [options] <path_to_image>"+reset)
-    order := []string{"w", "h", "m", "center", "p", "f", "spx", "cpx", "cache"}
+    order := []string{"w", "h", "m", "center", "p", "f", "spx", "sc", "cache"}
     for _, key := range order {
       f := flag.Lookup(key)
       fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)

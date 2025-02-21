@@ -33,7 +33,7 @@ Usage: ttyimg [options] <path_to_image>
          fallback to when no protocol is supported: kitty, iterm, sixel (default: sixel)
   -spx string
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite (default: 1920x1080)
-  -cpx string
+  -sc string
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite (default: 120x30)
   -cache bool
          rather or not to cache the heavy operations (default: true)
@@ -75,7 +75,7 @@ Usage: ttyimg [options] <path_to_image>
     *  fallbacks into go term query (never really fails)  
     *  but still have fallback just in case, also can be forced for emulated terminals  
 
-Those options e.g (spx, cpx) aren't really important for normal users.  
+Those options e.g (spx, sc) aren't really important for normal users.  
 but can be very powerfull for power users trying to call the program in emulated environments, like neovim \ tmux.  
 
 > using those values we can use sizes  
