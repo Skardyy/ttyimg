@@ -10,7 +10,6 @@ import (
   _ "image/jpeg"
   _ "image/png"
   "os"
-  "os/exec"
   "path/filepath"
   "strings"
 
@@ -162,26 +161,23 @@ func NewBufferedWriter() *bufio.Writer {
 }
 
 func detect_cap(fallback string) (iterm bool, kitty bool, sixel bool) {
-  _, errWez := exec.LookPath("wezterm")
-  _, errKit := exec.LookPath("kitty")
-
   isKittyCapable := rasterm.IsKittyCapable()
-  if isKittyCapable && errKit == nil {
-    return false, true, false
-  }
   isItermCapable := rasterm.IsItermCapable()
-  if isItermCapable && errWez == nil {
-    return true, false, false
-  }
   isSixelCapable := false
 
-  switch strings.ToLower(fallback) {
-  case "kitty":
-    isKittyCapable = true
-  case "iterm":
-    isItermCapable = true
-  case "sixel":
-    isSixelCapable = true
+  if !isItermCapable && !isKittyCapable && fallback != "sixel" {
+    isSixelCapable, _ = rasterm.IsSixelCapable()
+  }
+
+  if !isKittyCapable && !isItermCapable && !isSixelCapable {
+    switch strings.ToLower(fallback) {
+    case "kitty":
+      isKittyCapable = true
+    case "iterm":
+      isItermCapable = true
+    case "sixel":
+      isSixelCapable = true
+    }
   }
 
   return isItermCapable, isKittyCapable, isSixelCapable

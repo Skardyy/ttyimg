@@ -1,8 +1,8 @@
 <h1 align="center">ttyimg</h1>  
-<p align="center">🖼️ Apowerfull cli tool for encoding images into <b>Iterm2 / Kitty / Sixel</b> 🖼️</p> 
+<p align="center">A powerfull cli tool for encoding images into <br/>
+<b> Iterm2 / Kitty / Sixel </b> </p> 
 <div align="center">
     
-
 [![Static Badge](https://img.shields.io/badge/go.dev-1e2029?style=flat&logo=go&logoColor=00ADD8&label=find%20at&labelColor=15161b)](https://pkg.go.dev/github.com/Skardyy/ttyimg) ˙ ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Skardyy/ttyimg/release.yml?style=flat&labelColor=15161b&color=1e2029)
 
 
@@ -71,7 +71,7 @@ Usage: ttyimg [options] <path_to_image>
     *  windows: windows api
     *  if neither works, uses the screen option as final fallback
 * then queries the size in cells (rows, cols)  
-    *  it too tries sending `\033[18t`  
+    *  it too tries sending osc: `\033[18t`  
     *  fallbacks into go term query (never really fails)  
     *  but still have fallback just in case, also can be forced for emulated terminals  
 
