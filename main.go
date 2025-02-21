@@ -85,7 +85,7 @@ func main() {
   imgPath := flag.Args()[0]
 
   sSize := ScreenSize{}
-  sSize.query(screenSizePx, screenSizePx)
+  sSize.query(screenSizePx, screenSizeCell)
   resizedImg := get_img(imgPath, width, height, resizeMode, cache, sSize)
 
   if resizedImg == nil {
