@@ -172,6 +172,10 @@ func ParseDimension(input string) (Dimension, error) {
 
 // sends osc and waits max 200ms for the res
 func queryTerminal(escapeSeq string) (string, error) {
+  if !term.IsTerminal(int(os.Stderr.Fd())) {
+    return "", fmt.Errorf("stderr not connected to terminal")
+  }
+
   fd := int(os.Stdin.Fd())
   clean_func := make_raw(fd)
   defer clean_func()
