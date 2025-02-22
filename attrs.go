@@ -56,7 +56,7 @@ func get_size_osc() (int, int, error) {
 func get_size_cells(cellHandler *string) (int, int, error) {
   response, err := queryTerminal("\033[18t")
   if err != nil {
-    fd := int(os.Stdout.Fd())
+    fd := int(os.Stderr.Fd())
     widthCell, heightCell, err := term.GetSize(fd)
     *cellHandler = "go term"
     return widthCell, heightCell, err
@@ -174,6 +174,9 @@ func ParseDimension(input string) (Dimension, error) {
 func queryTerminal(escapeSeq string) (string, error) {
   if !term.IsTerminal(int(os.Stderr.Fd())) {
     return "", fmt.Errorf("stderr not connected to terminal")
+  }
+  if !term.IsTerminal(int(os.Stdin.Fd())) {
+    return "", fmt.Errorf("stdin not connected to terminal")
   }
 
   fd := int(os.Stdin.Fd())
