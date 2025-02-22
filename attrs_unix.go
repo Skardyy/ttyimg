@@ -11,7 +11,7 @@ import (
 
 // only reliable thing for linux at the moment
 func getIoCtlSize() (width, height int) {
-  ws, err := unix.IoctlGetWinsize(int(os.Stdout.Fd()), unix.TIOCGWINSZ)
+  ws, err := unix.IoctlGetWinsize(int(os.Stderr.Fd()), unix.TIOCGWINSZ)
   if err != nil {
     return 0, 0
   }
