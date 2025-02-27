@@ -36,7 +36,7 @@ Usage: ttyimg [options] <path_to_image>
   -sc string
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite (default: 120x30)
   -scale string
-         scales the spx and sc, only usefull for centering in smaller portions of the screen (default: 1)
+         <float>x<float> scales the spx and sc, only usefull for centering in smaller portions of the screen (default: 1x1)
   -cache bool
          rather or not to cache the heavy operations (default: true)
 ```
