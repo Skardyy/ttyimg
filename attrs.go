@@ -40,7 +40,7 @@ type ScreenSize struct {
 }
 
 func get_size_osc() (int, int, error) {
-  response, err := queryTerminal("\033[14t")
+  response, err := queryTerminal("\x1b[14t")
   if err != nil {
     return 0, 0, err
   }
@@ -54,7 +54,7 @@ func get_size_osc() (int, int, error) {
 }
 
 func get_size_cells(cellHandler *string) (int, int, error) {
-  response, err := queryTerminal("\033[18t")
+  response, err := queryTerminal("\x1b[18t")
   if err != nil {
     fd := int(os.Stderr.Fd())
     widthCell, heightCell, err := term.GetSize(fd)
@@ -71,7 +71,7 @@ func get_size_cells(cellHandler *string) (int, int, error) {
   return width, height, nil
 }
 
-func (s *ScreenSize) query(fallbackPx string, fallbackCell string) {
+func (s *ScreenSize) query(fallbackPx string, fallbackCell string, scale float64) {
   forcePx := strings.Contains(strings.ToLower(fallbackPx), "force")
   forceCell := strings.Contains(strings.ToLower(fallbackCell), "force")
   hanlderPx := ""
@@ -106,6 +106,10 @@ func (s *ScreenSize) query(fallbackPx string, fallbackCell string) {
     handlerCell = "fallback"
   }
 
+  s.widthPx = int(float64(s.widthPx) * scale)
+  s.heightPx = int(float64(s.heightPx) * scale)
+  s.widthCell = int(float64(s.widthCell) * scale)
+  s.heightCell = int(float64(s.heightCell) * scale)
   logMsg := fmt.Sprintf("px handler: <%s> gave %dx%d\n    cell handler: <%s> gave %dx%d\n    forcePx: %t\n    forceCell: %t", hanlderPx, s.widthPx, s.heightPx, handlerCell, s.widthCell, s.heightCell, forcePx, forceCell)
   logger.Write(logMsg)
 }

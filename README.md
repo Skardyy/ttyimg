@@ -35,6 +35,8 @@ Usage: ttyimg [options] <path_to_image>
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite (default: 1920x1080)
   -sc string
          <width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite (default: 120x30)
+  -scale string
+         scales the spx and sc, only usefull for centering in smaller portions of the screen (default: 1)
   -cache bool
          rather or not to cache the heavy operations (default: true)
 ```
@@ -66,16 +68,14 @@ Usage: ttyimg [options] <path_to_image>
 > Libreoffice was chosen for it being the only crossplatform one  
 
 ## App Logic  
-* first queries the size of the screen using `\033[14t` in case the terminal doesn't support it, fallbacks to:
-    *  unix: ioctl
-    *  windows: windows api
-    *  if neither works, uses the screen option as final fallback
-* then queries the size in cells (rows, cols)  
-    *  it too tries sending osc: `\033[18t`  
-    *  fallbacks into go term query (never really fails)  
-    *  but still have fallback just in case, also can be forced for emulated terminals  
+* first queries the size of the screen using:  
+    *  cells: `\x1b[18t`
+    *  px: `\x1b[14t`
+* if neither works it fallbacks to:  
+    *  cells: term.GetSize(fd), uses win api / ioctl respectfully, shouldn't fail unless stderr is not the terminal.  
+    *  px: ioctl / windows api. windows shouldn't fail, just not as accurate. ioctl only fails if stderr is not the temrinal.  
 
-Those options e.g (spx, sc) aren't really important for normal users.  
+Those options e.g (spx, sc, scale) aren't really important for normal users.  
 but can be very powerfull for power users trying to call the program in emulated environments, like neovim \ tmux.  
 
 > using those values we can use sizes  

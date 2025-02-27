@@ -45,6 +45,7 @@ func main() {
   var screenSizeCell string
   var center bool
   var cache bool
+  var scale float64
   flag.StringVar(&widthPre, "w", "80%", "Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
   flag.StringVar(&heightPre, "h", "60%", "Resize height: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
@@ -53,16 +54,17 @@ func main() {
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
   flag.StringVar(&screenSizePx, "spx", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite")
   flag.StringVar(&screenSizeCell, "sc", "120x30", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite")
+  flag.Float64Var(&scale, "scale", 1, "scales the spx and sc, only usefull for centering in smaller portions of the screen")
   flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
 
   flag.Usage = func() {
-    blue := "\033[34m"
-    reset := "\033[0m"
-    green := "\033[32m"
-    purple := "\033[35m"
-    yellow := "\033[33m"
+    blue := "\x1b[34m"
+    reset := "\x1b[0m"
+    green := "\x1b[32m"
+    purple := "\x1b[35m"
+    yellow := "\x1b[33m"
     fmt.Fprintln(os.Stderr, purple+"Usage: ttyimg [options] <path_to_image>"+reset)
-    order := []string{"w", "h", "m", "center", "p", "f", "spx", "sc", "cache"}
+    order := []string{"w", "h", "m", "center", "p", "f", "spx", "sc", "scale", "cache"}
     for _, key := range order {
       f := flag.Lookup(key)
       fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)
@@ -85,7 +87,7 @@ func main() {
   imgPath := flag.Args()[0]
 
   sSize := ScreenSize{}
-  sSize.query(screenSizePx, screenSizeCell)
+  sSize.query(screenSizePx, screenSizeCell, scale)
   resizedImg := get_img(imgPath, width, height, resizeMode, cache, sSize)
 
   if resizedImg == nil {
