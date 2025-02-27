@@ -71,7 +71,7 @@ func get_size_cells(cellHandler *string) (int, int, error) {
   return width, height, nil
 }
 
-func (s *ScreenSize) query(fallbackPx string, fallbackCell string, scale float64) {
+func (s *ScreenSize) query(fallbackPx string, fallbackCell string, scale string) {
   forcePx := strings.Contains(strings.ToLower(fallbackPx), "force")
   forceCell := strings.Contains(strings.ToLower(fallbackCell), "force")
   hanlderPx := ""
@@ -106,10 +106,14 @@ func (s *ScreenSize) query(fallbackPx string, fallbackCell string, scale float64
     handlerCell = "fallback"
   }
 
-  s.widthPx = int(float64(s.widthPx) * scale)
-  s.heightPx = int(float64(s.heightPx) * scale)
-  s.widthCell = int(float64(s.widthCell) * scale)
-  s.heightCell = int(float64(s.heightCell) * scale)
+  parts := strings.Split(scale, "x")
+  scale_x, _ := strconv.ParseFloat(parts[0], 32)
+  scale_y, _ := strconv.ParseFloat(parts[1], 32)
+
+  s.widthPx = int(float64(s.widthPx) * scale_x)
+  s.heightPx = int(float64(s.heightPx) * scale_y)
+  s.widthCell = int(float64(s.widthCell) * scale_x)
+  s.heightCell = int(float64(s.heightCell) * scale_y)
   logMsg := fmt.Sprintf("px handler: <%s> gave %dx%d\n    cell handler: <%s> gave %dx%d\n    forcePx: %t\n    forceCell: %t", hanlderPx, s.widthPx, s.heightPx, handlerCell, s.widthCell, s.heightCell, forcePx, forceCell)
   logger.Write(logMsg)
 }

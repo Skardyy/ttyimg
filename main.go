@@ -45,7 +45,7 @@ func main() {
   var screenSizeCell string
   var center bool
   var cache bool
-  var scale float64
+  var scale string
   flag.StringVar(&widthPre, "w", "80%", "Resize width: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
   flag.StringVar(&heightPre, "h", "60%", "Resize height: <number> (pixels) / <number>px / <number>c (cells) / <number>%")
   flag.StringVar(&resizeMode, "m", "Fit", "the resize mode to use when resizing: Fit, Strech, Crop")
@@ -54,7 +54,7 @@ func main() {
   flag.StringVar(&fallback, "f", "sixel", "fallback to when no protocol is supported: kitty, iterm, sixel")
   flag.StringVar(&screenSizePx, "spx", "1920x1080", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in px for fallback / overwrite")
   flag.StringVar(&screenSizeCell, "sc", "120x30", "<width>x<height> or <width>x<height>xForce. specify the size of the winodw in cell for fallback / overwrite")
-  flag.Float64Var(&scale, "scale", 1, "scales the spx and sc, only usefull for centering in smaller portions of the screen")
+  flag.StringVar(&scale, "scale", "1x1", "<float>x<float> scales the spx and sc, only usefull for centering in smaller portions of the screen")
   flag.BoolVar(&cache, "cache", true, "rather or not to cache the heavy operations")
 
   flag.Usage = func() {
