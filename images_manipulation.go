@@ -47,6 +47,9 @@ func cropImage(img image.Image, width, height int) image.Image {
 }
 
 func ResizeImage(img image.Image, width, height uint, method ResizeMethod) (image.Image, error) {
+  if img == nil {
+    return nil, fmt.Errorf("error decoding image")
+  }
   bounds := img.Bounds()
   srcWidth := bounds.Dx()
   srcHeight := bounds.Dy()

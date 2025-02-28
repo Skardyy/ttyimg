@@ -47,12 +47,18 @@ Usage: ttyimg [options] <path_to_image>
 - [X] TIFF  
 - [X] SVG  
 - [X] WEBP  
+- [X] BMP  
+- [X] GIF -- static only  
 - [X] DOCX  
 - [X] XLSX  
 - [X] PDF  
 - [X] PPTX  
+- [X] ODG  
+- [X] ODP  
+- [X] ODS  
+- [X] ODT  
 
-> DOCX, XLSX, PDF and PPTX require
+> DOCX, XLSX, PDF PPTX, ODG, ODP, ODS, ODT require
 ><details>
 >  <summary>Libreoffice</summary>
 > 
