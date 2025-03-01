@@ -90,6 +90,8 @@ func main() {
       fmt.Fprintln(os.Stderr, green+"  -"+key+reset, blue+determineType(f.DefValue)+reset)
       fmt.Fprintln(os.Stderr, "        ", flag.Lookup(key).Usage, yellow+"(default:", f.DefValue+")"+reset)
     }
+
+    os.Exit(1)
   }
   flag.Parse()
 

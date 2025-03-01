@@ -4,3 +4,4 @@
 ttyimg
 ttyimg_cache.db
 logs.log
+ttyimg_cache.db.lock
