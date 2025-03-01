@@ -64,6 +64,18 @@ func main() {
     defer os.Exit(0)
     return nil
   })
+  flag.Func("validate", "tests if ttyimg is working as expected", func(s string) error {
+    if s != version {
+      fmt.Fprintf(os.Stderr, "ttyimg version mismatch, got: '%s' expects: '%s'.\n", s, version)
+      defer os.Exit(1)
+    } else {
+      fmt.Printf("ttyimg version matches: '%s'\n", version)
+      defer os.Exit(0)
+    }
+    useIterm, useKitty, useSixel := detect_cap("")
+    fmt.Printf("Iterm: %t, Kitty: %t, Sixel: %t", useIterm, useKitty, useSixel)
+    return nil
+  })
 
   flag.Usage = func() {
     blue := "\x1b[34m"
