@@ -28,7 +28,7 @@ var db_loc = get_db_loc()
 var db, _ = bolt.Open(db_loc, 0600, nil)
 var bucket_name = []byte("documents")
 
-const version = "1.0.4"
+const version = "1.0.5"
 
 func main() {
   logger.Init(get_log_path(), true)
