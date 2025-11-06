@@ -1,3 +1,7 @@
+> [!Note]  
+> `ttyimg` has been superseded by [mcat](https://github.com/Skardyy/mcat).  
+> Use `ttyimg` only as part of the [neoimg](https://github.com/Skardyy/neo-img) plugin. otherwise, switch to `mcat` for better support.
+
 <h1 align="center">ttyimg</h1>  
 <p align="center">A powerfull cli tool for encoding images into <br/>
 <b> Iterm2 / Kitty / Sixel </b> </p> 
